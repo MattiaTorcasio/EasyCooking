@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,9 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.cucinafacileapp.models.Recipe
 import com.example.cucinafacileapp.network.ApiClient
 import com.example.cucinafacileapp.network.RecipeApi
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class MainActivity : ComponentActivity() {
     private val tag = "CucinaFacile"
@@ -36,7 +34,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     RecipeScreen()
-
                 }
             }
         }
@@ -47,28 +44,18 @@ class MainActivity : ComponentActivity() {
         var recipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
 
         LaunchedEffect(true) {
-            val api = ApiClient.getClient().create(RecipeApi::class.java)
-            api.getAllRecipes().enqueue(object : Callback<List<Recipe>> {
-                override fun onResponse(
-                    call: Call<List<Recipe>>,
-                    response: Response<List<Recipe>>
-                ) {
-                    if (response.isSuccessful) {
-                        recipes = response.body() ?: emptyList()
-                    } else {
-                        Log.e(tag, "API call failed: ${response.code()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<List<Recipe>>, t: Throwable) {
-                    Log.e(tag, "Network error: ${t.message}")
-                }
-            })
+            try {
+                val api = ApiClient.getClient().create(RecipeApi::class.java)
+                val result = api.getAllRecipes() // suspend call
+                recipes = result
+            } catch (e: Exception) {
+                Log.e(tag, "Error loading recipes", e)
+            }
         }
 
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(id = R.string.title), // 🌍 Localized app title
+                text = stringResource(id = R.string.title),
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -96,7 +83,8 @@ class MainActivity : ComponentActivity() {
                                 Text(
                                     text = recipe.name,
                                     fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.testTag("recipe_title")
                                 )
 
                                 val flag = when (recipe.languageCode.lowercase()) {
@@ -115,7 +103,7 @@ class MainActivity : ComponentActivity() {
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = stringResource(id = R.string.ingredients), // 🌍 Localized label
+                                text = stringResource(id = R.string.ingredients),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color(0xFF9C6644)
