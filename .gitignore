@@ -1,0 +1,21 @@
+
+# === Android Studio ===
+.gradle/
+.idea/
+local.properties
+*.iml
+build/
+*/build/
+
+# === ASP.NET Core ===
+bin/
+obj/
+*.user
+*.suo
+
+# === General ===
+.DS_Store
+Thumbs.db
+.env
+*.log
+*.tmp
